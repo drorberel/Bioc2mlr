@@ -1,0 +1,303 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, echo = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/"
+)
+```
+
+
+
+# Bioc2mlr <img src="Bioc2mlr_Sticker.png" width="20%" height="20%" align="right" />
+
+R package to bridge between Bioconductor’s S4 complex genomic data container, to mlr, a meta machine learning aggregator package.
+
+Bioc2mlr is designed to convert Bioconductor S4 assay data containers summarizedExperiment, MultiAssayExperiment into generalized machnine learning environment.  
+
+Bioconductor's S4 data containers for genomic assays are popular, well established data structures. Their data architecture facilitates the application of common analytical procedures and well established statistical methodologies to large assay data. They are extensible to encompass new emerging technologies and analytical methods. However, the S4 system enforces strict constraints on the data and these constraints raise barriers for interoperability and integration with software and packages outside of Bioconductor's repository.   
+
+[mlr](https://mlr.mlr-org.com/) is a comprehensive package for machine learning. It aggregates hundreds of supervised and unsupervised models and facilitates analytics such as resampling, benchmarking, tuning, and ensemble. The [mlrCPO](https://github.com/mlr-org/mlrCPO) package extends mlr's pre-processing and feature engineering functionality via composable Preprocessing Operators (CPO) 'pipelines'.
+
+Bioc2mlr is a compact utility package designed to bridge between these approaches. It deploys transformations of [SummarizedExperiment](http://bioconductor.org/packages/release/bioc/html/SummarizedExperiment.html) and [MultiAssayExperiment](http://bioconductor.org/packages/release/bioc/html/MultiAssayExperiment.html) S4 data structures into mlr's expected format. It also implements Bioconductor's popular feature selection (filtering) methods used by limma package and others, as a CPO. The vignettes present comparisons to the [MLInterfaces](https://bioconductor.org/packages/release/bioc/html/MLInterfaces.html) package, which aims to achieve similar goals, and presents workflows for popular publicly available genomic datasets such as [curatedTCGAData](http://bioconductor.org/packages/release/data/experiment/html/curatedTCGAData.html).
+
+
+## Vision:
+```{r, echo = F}
+knitr::include_graphics("vision.jpg")
+```
+
+
+## Installation
+
+```{r, eval = FALSE}
+# Install development version from GitHub
+devtools::install_github("drorberel/Bioc2mlr")
+
+# TBA: Install release version from CRAN
+# install.packages("Bioc2mlr")
+
+```
+
+
+
+# Current implementations
+
+Two Bioconductor assay container are currently implemented: [SummarizedExperiment](http://bioconductor.org/packages/release/bioc/html/SummarizedExperiment.html) for a single assay (though may have multiple sub-assays slots), and [MultiAssayExperiment](http://bioconductor.org/packages/release/bioc/html/MultiAssayExperiment.html) for multiple assays.
+Within the machine-learning framework, the two main steps that are adapted are the pre-processing step, followed by the (multivariate) model fitting.   
+
+Tools will be demonstrated for each of these 4 combinations.
+
+| S4 assay data container     | Pre-processing (TBA)| Model (multivariate)   |
+|-----------------------------|:-------------:|-----------------------:|
+| SummarizedExperiment (SE)   | limmaCPO      | Fun_SE_to_taskFunc     |
+| MultiAssayExperiment (MAE)  | UnivCPO       | Fun_MAE_to_taskFunc    |
+
+
+
+## Usage
+[Vignettes](https://github.com/FredHutch/Bioc2mlr/tree/master/vignettes)  
+<br>
+
+
+
+## Proof of concept demonstration
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>", message=FALSE)
+
+library(tidyverse)  
+library(magrittr)
+
+library(Bioc2mlr)
+library(mlr)
+select<-dplyr::select
+```
+
+
+
+
+
+# Model-evaluation (ML)
+
+## A. SummarizedExperiment (SE)
+
+### Convert raw data from SE S4 class, to mlr's "task"
+```{r, message=FALSE} 
+data(Golub_Merge, package = 'golubEsets') # ExpressionSet 
+smallG<-Golub_Merge[200:259,]
+smallG
+
+library(SummarizedExperiment)
+smallG_SE<-makeSummarizedExperimentFromExpressionSet(smallG)
+
+# functional:
+task_SE_Functional<-Fun_SE_to_taskFunc(smallG_SE, param.Y.name = 'ALL.AML', param.covariates = NULL, param_positive_y_level = 'ALL', task_return_format = 'functional', task_type = 'classif') ## will work with either 1 or multiple assayS
+task_SE_Functional
+
+
+# non-functional:
+## 1. directly, but into DF
+extracted_DF_from_task_SE<-getTaskData(task_SE_Functional, functionals.as = "dfcols") # keep matrix
+extracted_DF_from_task_SE[,1:10] %>% str
+
+
+## 2. Fun_SE_to_taskFunc(..., task_return_format = 'dfcols')
+task_SE_NON_Functional<-Fun_SE_to_taskFunc(smallG_SE, param.Y.name = 'ALL.AML', param.covariates = NULL, param_positive_y_level = 'ALL', task_return_format = 'dfcols', task_type = 'classif') ## will work with either 1 or multiple assayS
+
+## 3. functional_to_NonFunctional_task_function(task_functional)
+task_SE_NON_Functional_alt<-functional_to_NonFunctional_task_function(task_SE_Functional)
+
+
+
+## 4. designated function ## TBA
+# extracted = extractFDAFeatures(task_SE_Functional, feat.methods = list("exprs" = all))
+
+
+```
+
+
+
+### Single assay ML demonstration
+
+#### Direct
+```{r, message=FALSE}
+library(class)
+smallG_train<-exprs(smallG)[,1:40]     %>% t 
+smallG_test <-exprs(smallG)[,-c(1:40)] %>% t
+knn_pred<-knn(smallG_train, smallG_test, cl = smallG$ALL.AML[1:40], k = 1, prob=TRUE)
+table(smallG$ALL.AML[-c(1:40)], knn_pred)
+```
+
+
+
+#### MLInterface
+```{r, message=FALSE}
+library(MLInterfaces)
+krun<-MLearn(formula = ALL.AML~., data = smallG, .method = knnI(k=1), trainInd = 1:40)
+krun
+confuMat(krun)
+```
+
+#### mlr
+```{r, message=FALSE}
+task_train<-task_SE_Functional %>% subsetTask(subset = 1:40)
+task_test <-task_SE_Functional %>% subsetTask(subset = 41:72)
+classif.lrn = makeLearner("classif.knn")
+model<-train(classif.lrn, task_train)
+Predict<-model %>% predict(task_test)
+Predict %>% calculateConfusionMatrix()
+```
+
+
+
+## B. MultiAssayExperiment (MAE)
+Two data examples:  
+1. miniACC, balanced, without 'dropouts'.  
+2. Customized, non-balanced, with 'dropouts'. 
+
+
+### Convert raw data from MAE S4 class, to mlr's "task"
+
+#### 1. miniACC
+```{r, message=FALSE}
+library(MultiAssayExperiment)
+miniACC
+# miniACC %>% sampleMap %>% data.frame %>% dplyr::select(primary, assay) %>% table # no replicates within same assay
+
+task_Functional_MAE<-Fun_MAE_to_taskFunc(miniACC, param.Y.name = 'vital_status', param.covariates = c('gender','days_to_death'), param_positive_y_level = '1', task_type = 'classif')
+task_Functional_MAE
+extracted_DF_from_task_MAE_functionals<-getTaskData(task_Functional_MAE, functionals.as = "matrix") # keep functionals
+extracted_DF_from_task_MAE_functionals[,1:10] %>% glimpse
+
+extracted_DF_from_task_MAE_dfcols<-getTaskData(task_Functional_MAE, functionals.as = "dfcols") # concatonate functionals
+extracted_DF_from_task_MAE_dfcols[,1:10] %>% glimpse
+```
+
+
+#### 2. Customized
+```{r}
+library(MultiAssayExperiment)
+
+patient.data <- data.frame(sex=c("M", "F", "M", "F", "F"),
+                           age=38:42,
+                           row.names=c("Jack", "Jill", "Bob", "Barbara","Meg"))
+## assay A
+arraydat <- matrix(seq(101, 108), ncol=4,
+                    dimnames=list(c("ENST00000294241", "ENST00000355076"),
+                                  c("array1", "array2", "array3", "array4")))
+coldat <- data.frame(slope53=rnorm(4), row.names=c("array1", "array2", "array3", "array4"))
+exprdat <- SummarizedExperiment(arraydat, colData=coldat)
+exprmap <- data.frame(primary=c("Jill", "Jill", "Meg", "Barbara"),
+                       colname=c("array1", "array2", "array3", "array4"),
+                       stringsAsFactors = FALSE)
+## assay B
+methyldat <-
+    matrix(1:10, ncol=5,
+           dimnames=list(c("ENST00000355076", "ENST00000383706"),
+                         c("methyl1", "methyl2", "methyl3",
+                           "methyl4", "methyl5")))
+methylmap <- data.frame(primary = c("Jack", "Jack", "Jack", "Meg", "Bob"),
+                         colname = c("methyl1", "methyl2", "methyl3", "methyl4", "methyl5"),
+                         stringsAsFactors = FALSE)
+
+myMultiAssay <- MultiAssayExperiment(list("A" = exprdat, "B" = methyldat), patient.data, list(A = exprmap, B = methylmap) %>% listToMap)
+myMultiAssay
+myMultiAssay %>% sampleMap %>% data.frame %>% select(primary, assay) %>% table # Yes replicates within same assay, and non-balanced  / dropouts!!!
+
+# myMultiAssay %>% sampleMap %>% data.frame %>% filter(assay == 'A')
+# myMultiAssay$sex
+
+task_Functional_MAE_customized<-Fun_MAE_to_taskFunc(myMultiAssay, param.Y.name = 'sex', param.covariates = NULL, param_positive_y_level = 'M', task_type = 'classif')
+
+
+```
+
+
+
+
+
+### Multi-assay ML demonstration
+
+#### mlr: vertical integration
+Unless the learner has sepecific implementation for functional data, it will be automatically converted into standard (non-functional) task.  
+bartMachine model was chosed only because it has a built-in NA handling. Any other 'learner' from mlr could be demonstrated instead.  
+```{r, message=FALSE, warning = FALSE}
+
+library(bartMachine)
+classif_lrn_bartMachine<-makeLearner("classif.bartMachine")
+model_bartMachine<-train(classif_lrn_bartMachine, task_Functional_MAE)
+Predict_bartMachine<-model_bartMachine %>% predict(task_Functional_MAE)
+Predict_bartMachine %>% calculateConfusionMatrix()
+```
+
+
+
+
+
+## Case studies (TBA):
+
+### 1\. CAVDmetaMAE: proof-of-concept example
+CAVD dataspace is an online resouce to access and analyze HIV vaccine experimental assay data. It is annotated, and accessible via either online tool, and R API DataSpaceR.
+
+The CAVDmetaMAE package implement a hypothesis-free approach, to find best candidates of immune biomarkers, that are associated with experimental groups, at each study (separately), and across all studies together (meta-analysis).
+
+Within each study, immune biomarkers will be analyzed by both single assays, and combinations across multiple assays.  
+[https://github.com/drorberel/CAVDmetaMAE](https://github.com/drorberel/CAVDmetaMAE "CAVDmetaMAE")  
+Private repo. Access permission by request.  
+
+<br>
+<br>
+
+
+### 2\. Multi-assay customized feature selection for JDRF data (under review)
+
+#### Data curation
+
+A. NCBI/GEO -\> SEs -\> MAE -\> task (DataPackageR)
+
+#### Paper’s reproducible results
+
+B. Biomarker discovery:  
+  B.1 Feature selection:   
+    Fun_lrn_univ_only_makePrep_MaG  
+    Fun_lrn_univ_Clusters_All_makePrep_MaG  
+B.2 Sensitivity analysis
+
+#### Customized Multi-assay feature selection
+
+C. (TBA) UnivCPO, UnivClustCPO (refactoring the above
+makePreprocWrapper()
+<br>
+<br>
+
+
+### 3\. Annotated public datasets (TBA)
+TCGA [curatedTCGAData](http://bioconductor.org/packages/release/data/experiment/html/curatedTCGAData.html)  
+Microbiome [curatedMetagenomicData](http://bioconductor.org/packages/release/data/experiment/vignettes/curatedMetagenomicData/inst/doc/curatedMetagenomicData.html)  
+<br>
+<br>
+
+
+
+### 4\. Customized multi-assay CPOs / composable pipelines (TBA)  
+Omicade4CPO [Omicade4](http://bioconductor.org/packages/release/bioc/html/omicade4.html)  
+mixomicsCPO [mixomics](https://cran.r-project.org/web/packages/mixOmics/index.html)  
+<br>
+<br>
+
+
+
+
+### 5\. Analysis Workflows: (TBA)
+Utilize MAE to collapse genes to sets/modules/pathways  
+Fortified: pheatmaps, ggfortify
+
+

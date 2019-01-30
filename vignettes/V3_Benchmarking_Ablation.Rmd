@@ -1,0 +1,112 @@
+---
+title: "V3_Benchmarking_Ablation"
+author: "Dror Berel"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_vignette:
+    keep_md: TRUE
+    toc: no
+vignette: >
+  %\VignetteIndexEntry{V3_Benchmarking_Ablation}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>")
+  
+library(dplyr)
+library(magrittr)
+library(purrr)
+library(limma)
+
+library(Bioc2mlr)
+library(mlr)
+library(mlrCPO)
+```
+
+
+# Pre-processing: Feature-selection via limma filtering
+
+## A. SummarizedExperiment (SE)
+```{r}
+data(Golub_Merge, package = 'golubEsets') # ExpressionSet 
+smallG<-Golub_Merge[200:259,]
+smallG
+
+library(SummarizedExperiment)
+smallG_SE<-makeSummarizedExperimentFromExpressionSet(smallG)
+
+smallG_SE # from vignette V1
+top_DE_analytes_present<-5
+
+# functional:
+task_SE_Functional<-Fun_SE_to_taskFunc(smallG_SE, param.Y.name = 'ALL.AML', param.covariates = NULL, param_positive_y_level = 'ALL', task_return_format = 'functional', task_type = 'classif') ## will work with either 1 or multiple assayS
+task_SE_Functional
+
+
+# non-functional:
+## 1. directly, but into DF
+extracted_DF_from_task_SE<-getTaskData(task_SE_Functional, functionals.as = "dfcols") # keep matrix
+extracted_DF_from_task_SE %>% str
+
+
+## 2. Fun_SE_to_taskFunc(..., task_return_format = 'dfcols')
+task_SE_NON_Functional<-Fun_SE_to_taskFunc(smallG_SE, param.Y.name = 'ALL.AML', param.covariates = NULL, param_positive_y_level = 'ALL', task_return_format = 'dfcols', task_type = 'classif') ## will work with either 1 or multiple assayS
+```
+
+
+### Direct (limma)
+```{r}
+design<-cbind(Grp1=1, Grp2vs1=smallG_SE$ALL.AML)
+fit<-lmFit(assay(smallG_SE), design)
+fit<-eBayes(fit) #  Moderated t-statistic
+SE_topDE_limma<-topTable(fit, coef=2, number = top_DE_analytes_present)
+SE_topDE_limma
+```
+
+
+### mlr
+
+#### Wrapper (JDRF version)
+
+#### CPO (univ only)
+```{r}
+
+## cpoFilterUnivariate() may NOT implement functional! even though functional should automatically transfered to non-functional !!! check!!!
+
+task_SE_NON_Functional_scaled<-task_SE_NON_Functional %>>% cpoScale() 
+
+SE_topDE_CPO_univ<-task_SE_NON_Functional %>>% cpoFilterUnivariate(abs = top_DE_analytes_present) 
+SE_topDE_CPO_univ
+
+#SE_topDE_CPO_univ<-task_SE_Functional %>>% cpoFilterUnivariate(abs = top_DE_analytes_present) 
+#SE_topDE_CPO_univ
+
+#SE_topDE_CPO_limma<-
+```
+
+
+## B. MultiAssayExperiment (MAE)
+```{r}
+library(MultiAssayExperiment)
+miniACC
+
+```
+
+
+### mlr
+#### Wrapper
+#### CPO (Mixomics / omicade4 / cluster)
+```{r}
+
+
+```
+
+
+# ?. Session information
+```{r }
+sessionInfo()
+```

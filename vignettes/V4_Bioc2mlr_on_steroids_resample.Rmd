@@ -1,0 +1,43 @@
+---
+title: "Bioc2mlr on steroids, resampling"
+author: "Dror Berel"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_vignette:
+    keep_md: TRUE
+    toc: no
+vignette: >
+  %\VignetteIndexEntry{Bioc2mlr on steroids, resampling}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>")
+  
+library(dplyr)
+library(magrittr)
+library(purrr)
+
+library(Bioc2mlr)
+library(mlr)
+library(tibble)
+```
+
+
+# Outline
+This vignette will demonstrate how to leverage the automate built-in tools in mlr, with the converted S4 assay container classes.
+Specifically, it will cover benchmarking, tuning parameters, and resampling (cross-validation, bootstraping)
+
+# 1. 
+
+
+
+
+
+# ?. Session information
+```{r }
+sessionInfo()
+```

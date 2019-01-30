@@ -1,0 +1,52 @@
+---
+title: "Feature Selection CPO"
+author: "Dror Berel"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_vignette:
+    keep_md: TRUE
+    toc: no
+vignette: >
+  %\VignetteIndexEntry{Feature Selection CPO}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>")
+  
+library(dplyr)
+library(magrittr)
+library(purrr)
+
+library(Bioc2mlr)
+library(mlr)
+library(tibble)
+```
+
+
+# Pre-processing: Feature-selection via limma filtering
+
+## A. SummarizedExperiment (SE)
+
+
+### Direct
+limma
+
+### mlr
+#### Wrapper
+#### CPO (univ only)
+
+
+
+## B. MultiAssayExperiment (MAE)
+
+
+
+
+# ?. Session information
+```{r }
+sessionInfo()
+```

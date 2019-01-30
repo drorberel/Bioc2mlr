@@ -1,0 +1,195 @@
+---
+title: "S4 to task conversion"
+author: "Dror Berel"
+date: "`r Sys.Date()`"
+output: 
+  BiocStyle::html_document:
+    keep_md: TRUE
+    toc: true
+  pdf_document:
+    toc: true
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>", message=FALSE)
+
+library(tidyverse)  
+library(magrittr)
+
+library(Bioc2mlr)
+library(mlr)
+select<-dplyr::select
+```
+
+
+
+
+
+# Model-evaluation (ML)
+
+## A. SummarizedExperiment (SE)
+
+### Convert raw data from SE S4 class, to mlr's "task"
+```{r, message=FALSE} 
+data(Golub_Merge, package = 'golubEsets') # ExpressionSet 
+smallG<-Golub_Merge[200:259,]
+smallG
+
+library(SummarizedExperiment)
+smallG_SE<-makeSummarizedExperimentFromExpressionSet(smallG)
+
+# functional:
+task_SE_Functional<-Fun_SE_to_taskFunc(smallG_SE, param.Y.name = 'ALL.AML', param.covariates = NULL, param_positive_y_level = 'ALL', task_return_format = 'functional', task_type = 'classif') ## will work with either 1 or multiple assayS
+task_SE_Functional
+
+
+# non-functional:
+## 1. directly, but into DF
+extracted_DF_from_task_SE<-getTaskData(task_SE_Functional, functionals.as = "dfcols") # keep matrix
+extracted_DF_from_task_SE[,1:10] %>% str
+
+
+## 2. Fun_SE_to_taskFunc(..., task_return_format = 'dfcols')
+task_SE_NON_Functional<-Fun_SE_to_taskFunc(smallG_SE, param.Y.name = 'ALL.AML', param.covariates = NULL, param_positive_y_level = 'ALL', task_return_format = 'dfcols', task_type = 'classif') ## will work with either 1 or multiple assayS
+
+## 3. functional_to_NonFunctional_task_function(task_functional)
+task_SE_NON_Functional_alt<-functional_to_NonFunctional_task_function(task_SE_Functional)
+
+
+
+## 4. designated function ## TBA
+# extracted = extractFDAFeatures(task_SE_Functional, feat.methods = list("exprs" = all))
+
+
+```
+
+
+
+### Single assay ML demonstration
+
+#### Direct
+```{r, message=FALSE}
+library(class)
+smallG_train<-exprs(smallG)[,1:40]     %>% t 
+smallG_test <-exprs(smallG)[,-c(1:40)] %>% t
+knn_pred<-knn(smallG_train, smallG_test, cl = smallG$ALL.AML[1:40], k = 1, prob=TRUE)
+table(smallG$ALL.AML[-c(1:40)], knn_pred)
+```
+
+
+
+#### MLInterface
+```{r, message=FALSE}
+library(MLInterfaces)
+krun<-MLearn(formula = ALL.AML~., data = smallG, .method = knnI(k=1), trainInd = 1:40)
+krun
+confuMat(krun)
+```
+
+#### mlr
+```{r, message=FALSE}
+task_train<-task_SE_Functional %>% subsetTask(subset = 1:40)
+task_test <-task_SE_Functional %>% subsetTask(subset = 41:72)
+classif.lrn = makeLearner("classif.knn")
+model<-train(classif.lrn, task_train)
+Predict<-model %>% predict(task_test)
+Predict %>% calculateConfusionMatrix()
+```
+
+
+
+## B. MultiAssayExperiment (MAE)
+Two data examples:  
+1. miniACC, balanced, without 'dropouts'.  
+2. Customized, non-balanced, with 'dropouts'. 
+
+
+### Convert raw data from MAE S4 class, to mlr's "task"
+
+#### 1. miniACC
+```{r, message=FALSE}
+library(MultiAssayExperiment)
+miniACC
+# miniACC %>% sampleMap %>% data.frame %>% dplyr::select(primary, assay) %>% table # no replicates within same assay
+
+task_Functional_MAE<-Fun_MAE_to_taskFunc(miniACC, param.Y.name = 'vital_status', param.covariates = c('gender','days_to_death'), param_positive_y_level = '1', task_type = 'classif')
+task_Functional_MAE
+extracted_DF_from_task_MAE_functionals<-getTaskData(task_Functional_MAE, functionals.as = "matrix") # keep functionals
+extracted_DF_from_task_MAE_functionals[,1:10] %>% glimpse
+
+extracted_DF_from_task_MAE_dfcols<-getTaskData(task_Functional_MAE, functionals.as = "dfcols") # concatonate functionals
+extracted_DF_from_task_MAE_dfcols[,1:10] %>% glimpse
+```
+
+
+#### 2. Customized
+```{r}
+library(MultiAssayExperiment)
+
+patient.data <- data.frame(sex=c("M", "F", "M", "F", "F"),
+                           age=38:42,
+                           row.names=c("Jack", "Jill", "Bob", "Barbara","Meg"))
+## assay A
+arraydat <- matrix(seq(101, 108), ncol=4,
+                    dimnames=list(c("ENST00000294241", "ENST00000355076"),
+                                  c("array1", "array2", "array3", "array4")))
+coldat <- data.frame(slope53=rnorm(4), row.names=c("array1", "array2", "array3", "array4"))
+exprdat <- SummarizedExperiment(arraydat, colData=coldat)
+exprmap <- data.frame(primary=c("Jill", "Jill", "Meg", "Barbara"),
+                       colname=c("array1", "array2", "array3", "array4"),
+                       stringsAsFactors = FALSE)
+## assay B
+methyldat <-
+    matrix(1:10, ncol=5,
+           dimnames=list(c("ENST00000355076", "ENST00000383706"),
+                         c("methyl1", "methyl2", "methyl3",
+                           "methyl4", "methyl5")))
+methylmap <- data.frame(primary = c("Jack", "Jack", "Jack", "Meg", "Bob"),
+                         colname = c("methyl1", "methyl2", "methyl3", "methyl4", "methyl5"),
+                         stringsAsFactors = FALSE)
+
+myMultiAssay <- MultiAssayExperiment(list("A" = exprdat, "B" = methyldat), patient.data, list(A = exprmap, B = methylmap) %>% listToMap)
+myMultiAssay
+myMultiAssay %>% sampleMap %>% data.frame %>% select(primary, assay) %>% table # Yes replicates within same assay, and non-balanced  / dropouts!!!
+
+# myMultiAssay %>% sampleMap %>% data.frame %>% filter(assay == 'A')
+# myMultiAssay$sex
+
+task_Functional_MAE_customized<-Fun_MAE_to_taskFunc(myMultiAssay, param.Y.name = 'sex', param.covariates = NULL, param_positive_y_level = 'M', task_type = 'classif')
+
+
+```
+
+
+
+
+
+### Multi-assay ML demonstration
+
+#### mlr: vertical integration
+Unless the learner has sepecific implementation for functional data, it will be automatically converted into standard (non-functional) task.  
+bartMachine model was chosed only because it has a built-in NA handling. Any other 'learner' from mlr could be demonstrated instead.  
+```{r, message=FALSE, warning = FALSE}
+
+library(bartMachine)
+classif_lrn_bartMachine<-makeLearner("classif.bartMachine")
+model_bartMachine<-train(classif_lrn_bartMachine, task_Functional_MAE)
+Predict_bartMachine<-model_bartMachine %>% predict(task_Functional_MAE)
+Predict_bartMachine %>% calculateConfusionMatrix()
+```
+
+
+TBA: built-in CPOs / see detailed vignette.  
+
+
+Session information
+```{r }
+sessionInfo()
+```
+
+
+
+
+

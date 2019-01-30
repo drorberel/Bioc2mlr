@@ -44,7 +44,7 @@ Fun_SE_to_taskFunc<-function(SE_obj, param.Y.name, param.covariates, param_posit
   ## B. Returned task. two options: Standard (Non-Functionals), and Functional
 
   ## B.1. Standard / Non-Functionals:
-  DF_non_functional<-cbind(DF_functionals, DF_exprsS$exprs %>% data.frame)
+  DF_non_functional<-cbind(DF_functionals, DF_exprsS %>% data.frame)
 
   ## make_task:
   ## Classif

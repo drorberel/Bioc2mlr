@@ -62,7 +62,7 @@ task_classif_to_Unsupervised<-function(task_non_functional){
 
 
 #' @export
-#' @rdname Helpers_1
+#' @rdname functional_helpers
 Func_task_classif_to_regr<-function(task_class_any){
   # task_class_any = task
   if( (task_class_any %>% getTaskTargets %>% levels %>% length) != 2) 'must be only 2 levels'
@@ -80,7 +80,7 @@ Func_task_classif_to_regr<-function(task_class_any){
 
 
 #' @export
-#' @rdname Helpers_1
+#' @rdname functional_helpers
 F_mlr_task_add_median_target<-function(task){
   # task = task_j
   DF<-task %>% getTaskData

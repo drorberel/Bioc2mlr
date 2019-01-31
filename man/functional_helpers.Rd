@@ -5,6 +5,8 @@
 \alias{functional_to_NonFunctional_task_function}
 \alias{next_F}
 \alias{task_classif_to_Unsupervised}
+\alias{Func_task_classif_to_regr}
+\alias{F_mlr_task_add_median_target}
 \title{Functionals}
 \usage{
 functional_to_NonFunctional_task_function(task_functional)
@@ -12,6 +14,10 @@ functional_to_NonFunctional_task_function(task_functional)
 next_F(task)
 
 task_classif_to_Unsupervised(task_non_functional)
+
+Func_task_classif_to_regr(task_class_any)
+
+F_mlr_task_add_median_target(task)
 }
 \arguments{
 \item{task}{task}

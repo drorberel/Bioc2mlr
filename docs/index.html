@@ -79,21 +79,15 @@
       
       </header><div class="row">
   <div class="col-md-9 contents">
-    <div class="page-header toc-ignore">
-      <h1></h1>
-            
-      
-      
-      <div class="hidden name"><code></code></div>
-
-    </div>
+    
 
     
     
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 <div id="bioc2mlr" class="section level1">
-<h1 class="hasAnchor">
-<a href="#bioc2mlr" class="anchor"></a>Bioc2mlr</h1>
+<div class="page-header"><h1 class="hasAnchor">
+<a href="#bioc2mlr" class="anchor"></a>Bioc2mlr <img src="reference/figures/Bioc2mlr_Sticker.png" width="20%" height="20%" align="right">
+</h1></div>
 <p>R package to bridge between Bioconductor’s S4 complex genomic data container, to mlr, a meta machine learning aggregator package.</p>
 <p>Bioc2mlr is designed to convert Bioconductor S4 assay data containers summarizedExperiment, MultiAssayExperiment into generalized machnine learning environment.</p>
 <p>Bioconductor’s S4 data containers for genomic assays are popular, well established data structures. Their data architecture facilitates the application of common analytical procedures and well established statistical methodologies to large assay data. They are extensible to encompass new emerging technologies and analytical methods. However, the S4 system enforces strict constraints on the data and these constraints raise barriers for interoperability and integration with software and packages outside of Bioconductor’s repository.</p>
@@ -102,7 +96,7 @@
 <div id="vision" class="section level2">
 <h2 class="hasAnchor">
 <a href="#vision" class="anchor"></a>Vision:</h2>
-<p><img src="vision.jpg" width="640"></p>
+<p><img src="reference/figures/vision.jpg" width="640"></p>
 </div>
 <div id="installation" class="section level2">
 <h2 class="hasAnchor">
@@ -119,7 +113,7 @@
 <a href="#current-implementations" class="anchor"></a>Current implementations</h1>
 <p>Two Bioconductor assay container are currently implemented: <a href="http://bioconductor.org/packages/release/bioc/html/SummarizedExperiment.html">SummarizedExperiment</a> for a single assay (though may have multiple sub-assays slots), and <a href="http://bioconductor.org/packages/release/bioc/html/MultiAssayExperiment.html">MultiAssayExperiment</a> for multiple assays. Within the machine-learning framework, the two main steps that are adapted are the pre-processing step, followed by the (multivariate) model fitting.</p>
 <p>Tools will be demonstrated for each of these 4 combinations.</p>
-<table class="table">
+<table class="table table">
 <thead><tr class="header">
 <th>S4 assay data container</th>
 <th align="center">Pre-processing (TBA)</th>
@@ -141,14 +135,317 @@
 <div id="usage" class="section level2">
 <h2 class="hasAnchor">
 <a href="#usage" class="anchor"></a>Usage</h2>
-<p><a href="https://github.com/FredHutch/Bioc2mlr/tree/master/vignettes">check vignettes:</a><br><a href="S4_to_task_conversion.html">V1_S4_to_task_conversion</a><br>
-TBA V2_feature_selection_CPO<br>
-TBA V3_Benchmarking_Ablation<br>
-TBA V4_Bioc2mlr_on_steroids_resample<br><br></p>
+<p><a href="https://github.com/FredHutch/Bioc2mlr/tree/master/vignettes">Vignettes</a><br><br></p>
 </div>
-<div id="case-studies" class="section level2">
+<div id="proof-of-concept-demonstration" class="section level2">
 <h2 class="hasAnchor">
-<a href="#case-studies" class="anchor"></a>Case studies:</h2>
+<a href="#proof-of-concept-demonstration" class="anchor"></a>Proof of concept demonstration</h2>
+</div>
+</div>
+<div id="model-evaluation-ml" class="section level1">
+<h1 class="hasAnchor">
+<a href="#model-evaluation-ml" class="anchor"></a>Model-evaluation (ML)</h1>
+<div id="a--summarizedexperiment-se" class="section level2">
+<h2 class="hasAnchor">
+<a href="#a--summarizedexperiment-se" class="anchor"></a>A. SummarizedExperiment (SE)</h2>
+<div id="convert-raw-data-from-se-s4-class-to-mlrs-task" class="section level3">
+<h3 class="hasAnchor">
+<a href="#convert-raw-data-from-se-s4-class-to-mlrs-task" class="anchor"></a>Convert raw data from SE S4 class, to mlr’s “task”</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" title="1"><span class="kw"><a href="https://www.rdocumentation.org/packages/utils/topics/data">data</a></span>(Golub_Merge, <span class="dt">package =</span> <span class="st">'golubEsets'</span>) <span class="co"># ExpressionSet </span></a>
+<a class="sourceLine" id="cb2-2" title="2">smallG&lt;-Golub_Merge[<span class="dv">200</span><span class="op">:</span><span class="dv">259</span>,]</a>
+<a class="sourceLine" id="cb2-3" title="3">smallG</a>
+<a class="sourceLine" id="cb2-4" title="4"><span class="co">#&gt; ExpressionSet (storageMode: lockedEnvironment)</span></a>
+<a class="sourceLine" id="cb2-5" title="5"><span class="co">#&gt; assayData: 60 features, 72 samples </span></a>
+<a class="sourceLine" id="cb2-6" title="6"><span class="co">#&gt;   element names: exprs </span></a>
+<a class="sourceLine" id="cb2-7" title="7"><span class="co">#&gt; protocolData: none</span></a>
+<a class="sourceLine" id="cb2-8" title="8"><span class="co">#&gt; phenoData</span></a>
+<a class="sourceLine" id="cb2-9" title="9"><span class="co">#&gt;   sampleNames: 39 40 ... 33 (72 total)</span></a>
+<a class="sourceLine" id="cb2-10" title="10"><span class="co">#&gt;   varLabels: Samples ALL.AML ... Source (11 total)</span></a>
+<a class="sourceLine" id="cb2-11" title="11"><span class="co">#&gt;   varMetadata: labelDescription</span></a>
+<a class="sourceLine" id="cb2-12" title="12"><span class="co">#&gt; featureData: none</span></a>
+<a class="sourceLine" id="cb2-13" title="13"><span class="co">#&gt; experimentData: use 'experimentData(object)'</span></a>
+<a class="sourceLine" id="cb2-14" title="14"><span class="co">#&gt;   pubMedIds: 10521349 </span></a>
+<a class="sourceLine" id="cb2-15" title="15"><span class="co">#&gt; Annotation: hu6800</span></a>
+<a class="sourceLine" id="cb2-16" title="16"></a>
+<a class="sourceLine" id="cb2-17" title="17"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(SummarizedExperiment)</a>
+<a class="sourceLine" id="cb2-18" title="18">smallG_SE&lt;-<span class="kw">makeSummarizedExperimentFromExpressionSet</span>(smallG)</a>
+<a class="sourceLine" id="cb2-19" title="19"></a>
+<a class="sourceLine" id="cb2-20" title="20"><span class="co"># functional:</span></a>
+<a class="sourceLine" id="cb2-21" title="21">task_SE_Functional&lt;-<span class="kw"><a href="reference/Fun_SE_to_taskFunc.html">Fun_SE_to_taskFunc</a></span>(smallG_SE, <span class="dt">param.Y.name =</span> <span class="st">'ALL.AML'</span>, <span class="dt">param.covariates =</span> <span class="ot">NULL</span>, <span class="dt">param_positive_y_level =</span> <span class="st">'ALL'</span>, <span class="dt">task_return_format =</span> <span class="st">'functional'</span>, <span class="dt">task_type =</span> <span class="st">'classif'</span>) <span class="co">## will work with either 1 or multiple assayS</span></a>
+<a class="sourceLine" id="cb2-22" title="22">task_SE_Functional</a>
+<a class="sourceLine" id="cb2-23" title="23"><span class="co">#&gt; Supervised task: DF_functionals</span></a>
+<a class="sourceLine" id="cb2-24" title="24"><span class="co">#&gt; Type: classif</span></a>
+<a class="sourceLine" id="cb2-25" title="25"><span class="co">#&gt; Target: ALL.AML</span></a>
+<a class="sourceLine" id="cb2-26" title="26"><span class="co">#&gt; Observations: 72</span></a>
+<a class="sourceLine" id="cb2-27" title="27"><span class="co">#&gt; Features:</span></a>
+<a class="sourceLine" id="cb2-28" title="28"><span class="co">#&gt;    numerics     factors     ordered functionals </span></a>
+<a class="sourceLine" id="cb2-29" title="29"><span class="co">#&gt;           0           0           0           1 </span></a>
+<a class="sourceLine" id="cb2-30" title="30"><span class="co">#&gt; Missings: FALSE</span></a>
+<a class="sourceLine" id="cb2-31" title="31"><span class="co">#&gt; Has weights: FALSE</span></a>
+<a class="sourceLine" id="cb2-32" title="32"><span class="co">#&gt; Has blocking: FALSE</span></a>
+<a class="sourceLine" id="cb2-33" title="33"><span class="co">#&gt; Has coordinates: FALSE</span></a>
+<a class="sourceLine" id="cb2-34" title="34"><span class="co">#&gt; Classes: 2</span></a>
+<a class="sourceLine" id="cb2-35" title="35"><span class="co">#&gt; ALL AML </span></a>
+<a class="sourceLine" id="cb2-36" title="36"><span class="co">#&gt;  47  25 </span></a>
+<a class="sourceLine" id="cb2-37" title="37"><span class="co">#&gt; Positive class: ALL</span></a>
+<a class="sourceLine" id="cb2-38" title="38"></a>
+<a class="sourceLine" id="cb2-39" title="39"></a>
+<a class="sourceLine" id="cb2-40" title="40"><span class="co"># non-functional:</span></a>
+<a class="sourceLine" id="cb2-41" title="41"><span class="co">## 1. directly, but into DF</span></a>
+<a class="sourceLine" id="cb2-42" title="42">extracted_DF_from_task_SE&lt;-<span class="kw">getTaskData</span>(task_SE_Functional, <span class="dt">functionals.as =</span> <span class="st">"dfcols"</span>) <span class="co"># keep matrix</span></a>
+<a class="sourceLine" id="cb2-43" title="43">extracted_DF_from_task_SE[,<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>] <span class="op">%&gt;%</span><span class="st"> </span>str</a>
+<a class="sourceLine" id="cb2-44" title="44"><span class="co">#&gt; 'data.frame':    72 obs. of  10 variables:</span></a>
+<a class="sourceLine" id="cb2-45" title="45"><span class="co">#&gt;  $ ALL.AML        : Factor w/ 2 levels "ALL","AML": 1 1 1 1 1 1 1 1 1 1 ...</span></a>
+<a class="sourceLine" id="cb2-46" title="46"><span class="co">#&gt;  $ exprs.D13627_at: num  330 544 978 1035 3895 ...</span></a>
+<a class="sourceLine" id="cb2-47" title="47"><span class="co">#&gt;  $ exprs.D13628_at: num  229 147 110 237 106 256 144 84 -7 -3 ...</span></a>
+<a class="sourceLine" id="cb2-48" title="48"><span class="co">#&gt;  $ exprs.D13630_at: num  359 289 609 485 866 663 673 401 480 273 ...</span></a>
+<a class="sourceLine" id="cb2-49" title="49"><span class="co">#&gt;  $ exprs.D13633_at: num  -9 57 207 302 475 0 112 257 244 252 ...</span></a>
+<a class="sourceLine" id="cb2-50" title="50"><span class="co">#&gt;  $ exprs.D13634_at: num  115 248 91 58 244 245 98 182 186 241 ...</span></a>
+<a class="sourceLine" id="cb2-51" title="51"><span class="co">#&gt;  $ exprs.D13635_at: num  31 -43 40 31 84 -159 -7 -2 62 111 ...</span></a>
+<a class="sourceLine" id="cb2-52" title="52"><span class="co">#&gt;  $ exprs.D13636_at: num  195 23 -60 317 449 -262 386 295 177 51 ...</span></a>
+<a class="sourceLine" id="cb2-53" title="53"><span class="co">#&gt;  $ exprs.D13637_at: num  161 137 -94 -96 432 -535 136 86 99 143 ...</span></a>
+<a class="sourceLine" id="cb2-54" title="54"><span class="co">#&gt;  $ exprs.D13639_at: num  456 3336 655 2771 3575 ...</span></a>
+<a class="sourceLine" id="cb2-55" title="55"></a>
+<a class="sourceLine" id="cb2-56" title="56"></a>
+<a class="sourceLine" id="cb2-57" title="57"><span class="co">## 2. Fun_SE_to_taskFunc(..., task_return_format = 'dfcols')</span></a>
+<a class="sourceLine" id="cb2-58" title="58">task_SE_NON_Functional&lt;-<span class="kw"><a href="reference/Fun_SE_to_taskFunc.html">Fun_SE_to_taskFunc</a></span>(smallG_SE, <span class="dt">param.Y.name =</span> <span class="st">'ALL.AML'</span>, <span class="dt">param.covariates =</span> <span class="ot">NULL</span>, <span class="dt">param_positive_y_level =</span> <span class="st">'ALL'</span>, <span class="dt">task_return_format =</span> <span class="st">'dfcols'</span>, <span class="dt">task_type =</span> <span class="st">'classif'</span>) <span class="co">## will work with either 1 or multiple assayS</span></a>
+<a class="sourceLine" id="cb2-59" title="59"></a>
+<a class="sourceLine" id="cb2-60" title="60"><span class="co">## 3. functional_to_NonFunctional_task_function(task_functional)</span></a>
+<a class="sourceLine" id="cb2-61" title="61">task_SE_NON_Functional_alt&lt;-<span class="kw"><a href="reference/functional_helpers.html">functional_to_NonFunctional_task_function</a></span>(task_SE_Functional)</a>
+<a class="sourceLine" id="cb2-62" title="62"></a>
+<a class="sourceLine" id="cb2-63" title="63"></a>
+<a class="sourceLine" id="cb2-64" title="64"></a>
+<a class="sourceLine" id="cb2-65" title="65"><span class="co">## 4. designated function ## TBA</span></a>
+<a class="sourceLine" id="cb2-66" title="66"><span class="co"># extracted = extractFDAFeatures(task_SE_Functional, feat.methods = list("exprs" = all))</span></a></code></pre></div>
+</div>
+<div id="single-assay-ml-demonstration" class="section level3">
+<h3 class="hasAnchor">
+<a href="#single-assay-ml-demonstration" class="anchor"></a>Single assay ML demonstration</h3>
+<div id="direct" class="section level4">
+<h4 class="hasAnchor">
+<a href="#direct" class="anchor"></a>Direct</h4>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" title="1"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(class)</a>
+<a class="sourceLine" id="cb3-2" title="2">smallG_train&lt;-<span class="kw">exprs</span>(smallG)[,<span class="dv">1</span><span class="op">:</span><span class="dv">40</span>]     <span class="op">%&gt;%</span><span class="st"> </span>t </a>
+<a class="sourceLine" id="cb3-3" title="3">smallG_test &lt;-<span class="kw">exprs</span>(smallG)[,<span class="op">-</span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="dv">1</span><span class="op">:</span><span class="dv">40</span>)] <span class="op">%&gt;%</span><span class="st"> </span>t</a>
+<a class="sourceLine" id="cb3-4" title="4">knn_pred&lt;-<span class="kw">knn</span>(smallG_train, smallG_test, <span class="dt">cl =</span> smallG<span class="op">$</span>ALL.AML[<span class="dv">1</span><span class="op">:</span><span class="dv">40</span>], <span class="dt">k =</span> <span class="dv">1</span>, <span class="dt">prob=</span><span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb3-5" title="5"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/table">table</a></span>(smallG<span class="op">$</span>ALL.AML[<span class="op">-</span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="dv">1</span><span class="op">:</span><span class="dv">40</span>)], knn_pred)</a>
+<a class="sourceLine" id="cb3-6" title="6"><span class="co">#&gt;      knn_pred</span></a>
+<a class="sourceLine" id="cb3-7" title="7"><span class="co">#&gt;       ALL AML</span></a>
+<a class="sourceLine" id="cb3-8" title="8"><span class="co">#&gt;   ALL  18   3</span></a>
+<a class="sourceLine" id="cb3-9" title="9"><span class="co">#&gt;   AML   4   7</span></a></code></pre></div>
+</div>
+<div id="mlinterface" class="section level4">
+<h4 class="hasAnchor">
+<a href="#mlinterface" class="anchor"></a>MLInterface</h4>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" title="1"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(MLInterfaces)</a>
+<a class="sourceLine" id="cb4-2" title="2"><span class="co">#&gt; Warning: package 'MLInterfaces' was built under R version 3.5.1</span></a>
+<a class="sourceLine" id="cb4-3" title="3"><span class="co">#&gt; Warning: package 'XML' was built under R version 3.5.2</span></a>
+<a class="sourceLine" id="cb4-4" title="4">krun&lt;-<span class="kw">MLearn</span>(<span class="dt">formula =</span> ALL.AML<span class="op">~</span>., <span class="dt">data =</span> smallG, <span class="dt">.method =</span> <span class="kw">knnI</span>(<span class="dt">k=</span><span class="dv">1</span>), <span class="dt">trainInd =</span> <span class="dv">1</span><span class="op">:</span><span class="dv">40</span>)</a>
+<a class="sourceLine" id="cb4-5" title="5">krun</a>
+<a class="sourceLine" id="cb4-6" title="6"><span class="co">#&gt; MLInterfaces classification output container</span></a>
+<a class="sourceLine" id="cb4-7" title="7"><span class="co">#&gt; The call was:</span></a>
+<a class="sourceLine" id="cb4-8" title="8"><span class="co">#&gt; MLearn(formula = ALL.AML ~ ., data = smallG, .method = knnI(k = 1), </span></a>
+<a class="sourceLine" id="cb4-9" title="9"><span class="co">#&gt;     trainInd = 1:40)</span></a>
+<a class="sourceLine" id="cb4-10" title="10"><span class="co">#&gt; Predicted outcome distribution for test set:</span></a>
+<a class="sourceLine" id="cb4-11" title="11"><span class="co">#&gt; </span></a>
+<a class="sourceLine" id="cb4-12" title="12"><span class="co">#&gt; ALL AML </span></a>
+<a class="sourceLine" id="cb4-13" title="13"><span class="co">#&gt;  22  10 </span></a>
+<a class="sourceLine" id="cb4-14" title="14"><span class="co">#&gt; Summary of scores on test set (use testScores() method for details):</span></a>
+<a class="sourceLine" id="cb4-15" title="15"><span class="co">#&gt;    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span></a>
+<a class="sourceLine" id="cb4-16" title="16"><span class="co">#&gt;       1       1       1       1       1       1</span></a>
+<a class="sourceLine" id="cb4-17" title="17"><span class="kw">confuMat</span>(krun)</a>
+<a class="sourceLine" id="cb4-18" title="18"><span class="co">#&gt;      predicted</span></a>
+<a class="sourceLine" id="cb4-19" title="19"><span class="co">#&gt; given ALL AML</span></a>
+<a class="sourceLine" id="cb4-20" title="20"><span class="co">#&gt;   ALL  18   3</span></a>
+<a class="sourceLine" id="cb4-21" title="21"><span class="co">#&gt;   AML   4   7</span></a></code></pre></div>
+</div>
+<div id="mlr" class="section level4">
+<h4 class="hasAnchor">
+<a href="#mlr" class="anchor"></a>mlr</h4>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" title="1">task_train&lt;-task_SE_Functional <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">subsetTask</span>(<span class="dt">subset =</span> <span class="dv">1</span><span class="op">:</span><span class="dv">40</span>)</a>
+<a class="sourceLine" id="cb5-2" title="2">task_test &lt;-task_SE_Functional <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">subsetTask</span>(<span class="dt">subset =</span> <span class="dv">41</span><span class="op">:</span><span class="dv">72</span>)</a>
+<a class="sourceLine" id="cb5-3" title="3">classif.lrn =<span class="st"> </span><span class="kw">makeLearner</span>(<span class="st">"classif.knn"</span>)</a>
+<a class="sourceLine" id="cb5-4" title="4">model&lt;-<span class="kw">train</span>(classif.lrn, task_train)</a>
+<a class="sourceLine" id="cb5-5" title="5">Predict&lt;-model <span class="op">%&gt;%</span><span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/stats/topics/predict">predict</a></span>(task_test)</a>
+<a class="sourceLine" id="cb5-6" title="6">Predict <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">calculateConfusionMatrix</span>()</a>
+<a class="sourceLine" id="cb5-7" title="7"><span class="co">#&gt;         predicted</span></a>
+<a class="sourceLine" id="cb5-8" title="8"><span class="co">#&gt; true     ALL AML -err.-</span></a>
+<a class="sourceLine" id="cb5-9" title="9"><span class="co">#&gt;   ALL     18   3      3</span></a>
+<a class="sourceLine" id="cb5-10" title="10"><span class="co">#&gt;   AML      4   7      4</span></a>
+<a class="sourceLine" id="cb5-11" title="11"><span class="co">#&gt;   -err.-   4   3      7</span></a></code></pre></div>
+</div>
+</div>
+</div>
+<div id="b--multiassayexperiment-mae" class="section level2">
+<h2 class="hasAnchor">
+<a href="#b--multiassayexperiment-mae" class="anchor"></a>B. MultiAssayExperiment (MAE)</h2>
+<p>Two data examples:<br>
+1. miniACC, balanced, without ‘dropouts’.<br>
+2. Customized, non-balanced, with ‘dropouts’.</p>
+<div id="convert-raw-data-from-mae-s4-class-to-mlrs-task" class="section level3">
+<h3 class="hasAnchor">
+<a href="#convert-raw-data-from-mae-s4-class-to-mlrs-task" class="anchor"></a>Convert raw data from MAE S4 class, to mlr’s “task”</h3>
+<div id="miniacc" class="section level4">
+<h4 class="hasAnchor">
+<a href="#miniacc" class="anchor"></a>1. miniACC</h4>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" title="1"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(MultiAssayExperiment)</a>
+<a class="sourceLine" id="cb6-2" title="2">miniACC</a>
+<a class="sourceLine" id="cb6-3" title="3"><span class="co">#&gt; A MultiAssayExperiment object of 5 listed</span></a>
+<a class="sourceLine" id="cb6-4" title="4"><span class="co">#&gt;  experiments with user-defined names and respective classes. </span></a>
+<a class="sourceLine" id="cb6-5" title="5"><span class="co">#&gt;  Containing an ExperimentList class object of length 5: </span></a>
+<a class="sourceLine" id="cb6-6" title="6"><span class="co">#&gt;  [1] RNASeq2GeneNorm: SummarizedExperiment with 198 rows and 79 columns </span></a>
+<a class="sourceLine" id="cb6-7" title="7"><span class="co">#&gt;  [2] gistict: SummarizedExperiment with 198 rows and 90 columns </span></a>
+<a class="sourceLine" id="cb6-8" title="8"><span class="co">#&gt;  [3] RPPAArray: SummarizedExperiment with 33 rows and 46 columns </span></a>
+<a class="sourceLine" id="cb6-9" title="9"><span class="co">#&gt;  [4] Mutations: matrix with 97 rows and 90 columns </span></a>
+<a class="sourceLine" id="cb6-10" title="10"><span class="co">#&gt;  [5] miRNASeqGene: SummarizedExperiment with 471 rows and 80 columns </span></a>
+<a class="sourceLine" id="cb6-11" title="11"><span class="co">#&gt; Features: </span></a>
+<a class="sourceLine" id="cb6-12" title="12"><span class="co">#&gt;  experiments() - obtain the ExperimentList instance </span></a>
+<a class="sourceLine" id="cb6-13" title="13"><span class="co">#&gt;  colData() - the primary/phenotype DataFrame </span></a>
+<a class="sourceLine" id="cb6-14" title="14"><span class="co">#&gt;  sampleMap() - the sample availability DataFrame </span></a>
+<a class="sourceLine" id="cb6-15" title="15"><span class="co">#&gt;  `$`, `[`, `[[` - extract colData columns, subset, or experiment </span></a>
+<a class="sourceLine" id="cb6-16" title="16"><span class="co">#&gt;  *Format() - convert into a long or wide DataFrame </span></a>
+<a class="sourceLine" id="cb6-17" title="17"><span class="co">#&gt;  assays() - convert ExperimentList to a SimpleList of matrices</span></a>
+<a class="sourceLine" id="cb6-18" title="18"><span class="co"># miniACC %&gt;% sampleMap %&gt;% data.frame %&gt;% dplyr::select(primary, assay) %&gt;% table # no replicates within same assay</span></a>
+<a class="sourceLine" id="cb6-19" title="19"></a>
+<a class="sourceLine" id="cb6-20" title="20">task_Functional_MAE&lt;-<span class="kw"><a href="reference/Fun_MAE_to_taskFunc.html">Fun_MAE_to_taskFunc</a></span>(miniACC, <span class="dt">param.Y.name =</span> <span class="st">'vital_status'</span>, <span class="dt">param.covariates =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="st">'gender'</span>,<span class="st">'days_to_death'</span>), <span class="dt">param_positive_y_level =</span> <span class="st">'1'</span>, <span class="dt">task_type =</span> <span class="st">'classif'</span>)</a>
+<a class="sourceLine" id="cb6-21" title="21">task_Functional_MAE</a>
+<a class="sourceLine" id="cb6-22" title="22"><span class="co">#&gt; Supervised task: DF_functionals</span></a>
+<a class="sourceLine" id="cb6-23" title="23"><span class="co">#&gt; Type: classif</span></a>
+<a class="sourceLine" id="cb6-24" title="24"><span class="co">#&gt; Target: vital_status</span></a>
+<a class="sourceLine" id="cb6-25" title="25"><span class="co">#&gt; Observations: 385</span></a>
+<a class="sourceLine" id="cb6-26" title="26"><span class="co">#&gt; Features:</span></a>
+<a class="sourceLine" id="cb6-27" title="27"><span class="co">#&gt;    numerics     factors     ordered functionals </span></a>
+<a class="sourceLine" id="cb6-28" title="28"><span class="co">#&gt;           1           5           0           5 </span></a>
+<a class="sourceLine" id="cb6-29" title="29"><span class="co">#&gt; Missings: TRUE</span></a>
+<a class="sourceLine" id="cb6-30" title="30"><span class="co">#&gt; Has weights: FALSE</span></a>
+<a class="sourceLine" id="cb6-31" title="31"><span class="co">#&gt; Has blocking: FALSE</span></a>
+<a class="sourceLine" id="cb6-32" title="32"><span class="co">#&gt; Has coordinates: FALSE</span></a>
+<a class="sourceLine" id="cb6-33" title="33"><span class="co">#&gt; Classes: 2</span></a>
+<a class="sourceLine" id="cb6-34" title="34"><span class="co">#&gt;   0   1 </span></a>
+<a class="sourceLine" id="cb6-35" title="35"><span class="co">#&gt; 248 137 </span></a>
+<a class="sourceLine" id="cb6-36" title="36"><span class="co">#&gt; Positive class: 1</span></a>
+<a class="sourceLine" id="cb6-37" title="37">extracted_DF_from_task_MAE_functionals&lt;-<span class="kw">getTaskData</span>(task_Functional_MAE, <span class="dt">functionals.as =</span> <span class="st">"matrix"</span>) <span class="co"># keep functionals</span></a>
+<a class="sourceLine" id="cb6-38" title="38">extracted_DF_from_task_MAE_functionals[,<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>] <span class="op">%&gt;%</span><span class="st"> </span>glimpse</a>
+<a class="sourceLine" id="cb6-39" title="39"><span class="co">#&gt; Observations: 385</span></a>
+<a class="sourceLine" id="cb6-40" title="40"><span class="co">#&gt; Variables: 10</span></a>
+<a class="sourceLine" id="cb6-41" title="41"><span class="co">#&gt; $ Unique_sample_id &lt;fct&gt; RNASeq2GeneNorm_TCGA-OR-A5J1_TCGA-OR-A5J1-01A...</span></a>
+<a class="sourceLine" id="cb6-42" title="42"><span class="co">#&gt; $ assay            &lt;fct&gt; RNASeq2GeneNorm, RNASeq2GeneNorm, RNASeq2Gene...</span></a>
+<a class="sourceLine" id="cb6-43" title="43"><span class="co">#&gt; $ primary          &lt;fct&gt; TCGA-OR-A5J1, TCGA-OR-A5J2, TCGA-OR-A5J3, TCG...</span></a>
+<a class="sourceLine" id="cb6-44" title="44"><span class="co">#&gt; $ colname          &lt;fct&gt; TCGA-OR-A5J1-01A-11R-A29S-07, TCGA-OR-A5J2-01...</span></a>
+<a class="sourceLine" id="cb6-45" title="45"><span class="co">#&gt; $ gender           &lt;fct&gt; male, female, female, male, female, female, m...</span></a>
+<a class="sourceLine" id="cb6-46" title="46"><span class="co">#&gt; $ days_to_death    &lt;int&gt; 1355, 1677, NA, 365, NA, 490, 579, NA, 922, 5...</span></a>
+<a class="sourceLine" id="cb6-47" title="47"><span class="co">#&gt; $ vital_status     &lt;fct&gt; 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, ...</span></a>
+<a class="sourceLine" id="cb6-48" title="48"><span class="co">#&gt; $ RNASeq2GeneNorm  &lt;dbl&gt; &lt;matrix[25 x 198]&gt;</span></a>
+<a class="sourceLine" id="cb6-49" title="49"><span class="co">#&gt; $ gistict          &lt;dbl&gt; &lt;matrix[25 x 198]&gt;</span></a>
+<a class="sourceLine" id="cb6-50" title="50"><span class="co">#&gt; $ RPPAArray        &lt;dbl&gt; &lt;matrix[25 x 33]&gt;</span></a>
+<a class="sourceLine" id="cb6-51" title="51"></a>
+<a class="sourceLine" id="cb6-52" title="52">extracted_DF_from_task_MAE_dfcols&lt;-<span class="kw">getTaskData</span>(task_Functional_MAE, <span class="dt">functionals.as =</span> <span class="st">"dfcols"</span>) <span class="co"># concatonate functionals</span></a>
+<a class="sourceLine" id="cb6-53" title="53">extracted_DF_from_task_MAE_dfcols[,<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>] <span class="op">%&gt;%</span><span class="st"> </span>glimpse</a>
+<a class="sourceLine" id="cb6-54" title="54"><span class="co">#&gt; Observations: 385</span></a>
+<a class="sourceLine" id="cb6-55" title="55"><span class="co">#&gt; Variables: 10</span></a>
+<a class="sourceLine" id="cb6-56" title="56"><span class="co">#&gt; $ Unique_sample_id       &lt;fct&gt; RNASeq2GeneNorm_TCGA-OR-A5J1_TCGA-OR-A5...</span></a>
+<a class="sourceLine" id="cb6-57" title="57"><span class="co">#&gt; $ assay                  &lt;fct&gt; RNASeq2GeneNorm, RNASeq2GeneNorm, RNASe...</span></a>
+<a class="sourceLine" id="cb6-58" title="58"><span class="co">#&gt; $ primary                &lt;fct&gt; TCGA-OR-A5J1, TCGA-OR-A5J2, TCGA-OR-A5J...</span></a>
+<a class="sourceLine" id="cb6-59" title="59"><span class="co">#&gt; $ colname                &lt;fct&gt; TCGA-OR-A5J1-01A-11R-A29S-07, TCGA-OR-A...</span></a>
+<a class="sourceLine" id="cb6-60" title="60"><span class="co">#&gt; $ gender                 &lt;fct&gt; male, female, female, male, female, fem...</span></a>
+<a class="sourceLine" id="cb6-61" title="61"><span class="co">#&gt; $ days_to_death          &lt;int&gt; 1355, 1677, NA, 365, NA, 490, 579, NA, ...</span></a>
+<a class="sourceLine" id="cb6-62" title="62"><span class="co">#&gt; $ vital_status           &lt;fct&gt; 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, ...</span></a>
+<a class="sourceLine" id="cb6-63" title="63"><span class="co">#&gt; $ RNASeq2GeneNorm.DIRAS3 &lt;dbl&gt; 1487.0317, 9.6631, 18.9602, 760.6507, 1...</span></a>
+<a class="sourceLine" id="cb6-64" title="64"><span class="co">#&gt; $ RNASeq2GeneNorm.MAPK14 &lt;dbl&gt; 778.5783, 2823.6469, 1061.7686, 806.351...</span></a>
+<a class="sourceLine" id="cb6-65" title="65"><span class="co">#&gt; $ RNASeq2GeneNorm.YAP1   &lt;dbl&gt; 1009.6061, 2305.0590, 1561.2502, 713.40...</span></a></code></pre></div>
+</div>
+<div id="customized" class="section level4">
+<h4 class="hasAnchor">
+<a href="#customized" class="anchor"></a>2. Customized</h4>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" title="1"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(MultiAssayExperiment)</a>
+<a class="sourceLine" id="cb7-2" title="2"></a>
+<a class="sourceLine" id="cb7-3" title="3">patient.data &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/data.frame">data.frame</a></span>(<span class="dt">sex=</span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="st">"M"</span>, <span class="st">"F"</span>, <span class="st">"M"</span>, <span class="st">"F"</span>, <span class="st">"F"</span>),</a>
+<a class="sourceLine" id="cb7-4" title="4">                           <span class="dt">age=</span><span class="dv">38</span><span class="op">:</span><span class="dv">42</span>,</a>
+<a class="sourceLine" id="cb7-5" title="5">                           <span class="dt">row.names=</span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="st">"Jack"</span>, <span class="st">"Jill"</span>, <span class="st">"Bob"</span>, <span class="st">"Barbara"</span>,<span class="st">"Meg"</span>))</a>
+<a class="sourceLine" id="cb7-6" title="6"><span class="co">## assay A</span></a>
+<a class="sourceLine" id="cb7-7" title="7">arraydat &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/matrix">matrix</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/seq">seq</a></span>(<span class="dv">101</span>, <span class="dv">108</span>), <span class="dt">ncol=</span><span class="dv">4</span>,</a>
+<a class="sourceLine" id="cb7-8" title="8">                    <span class="dt">dimnames=</span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/list">list</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="st">"ENST00000294241"</span>, <span class="st">"ENST00000355076"</span>),</a>
+<a class="sourceLine" id="cb7-9" title="9">                                  <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="st">"array1"</span>, <span class="st">"array2"</span>, <span class="st">"array3"</span>, <span class="st">"array4"</span>)))</a>
+<a class="sourceLine" id="cb7-10" title="10">coldat &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/data.frame">data.frame</a></span>(<span class="dt">slope53=</span><span class="kw"><a href="https://www.rdocumentation.org/packages/stats/topics/Normal">rnorm</a></span>(<span class="dv">4</span>), <span class="dt">row.names=</span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="st">"array1"</span>, <span class="st">"array2"</span>, <span class="st">"array3"</span>, <span class="st">"array4"</span>))</a>
+<a class="sourceLine" id="cb7-11" title="11">exprdat &lt;-<span class="st"> </span><span class="kw">SummarizedExperiment</span>(arraydat, <span class="dt">colData=</span>coldat)</a>
+<a class="sourceLine" id="cb7-12" title="12">exprmap &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/data.frame">data.frame</a></span>(<span class="dt">primary=</span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="st">"Jill"</span>, <span class="st">"Jill"</span>, <span class="st">"Meg"</span>, <span class="st">"Barbara"</span>),</a>
+<a class="sourceLine" id="cb7-13" title="13">                       <span class="dt">colname=</span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="st">"array1"</span>, <span class="st">"array2"</span>, <span class="st">"array3"</span>, <span class="st">"array4"</span>),</a>
+<a class="sourceLine" id="cb7-14" title="14">                       <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)</a>
+<a class="sourceLine" id="cb7-15" title="15"><span class="co">## assay B</span></a>
+<a class="sourceLine" id="cb7-16" title="16">methyldat &lt;-</a>
+<a class="sourceLine" id="cb7-17" title="17"><span class="st">    </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/matrix">matrix</a></span>(<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>, <span class="dt">ncol=</span><span class="dv">5</span>,</a>
+<a class="sourceLine" id="cb7-18" title="18">           <span class="dt">dimnames=</span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/list">list</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="st">"ENST00000355076"</span>, <span class="st">"ENST00000383706"</span>),</a>
+<a class="sourceLine" id="cb7-19" title="19">                         <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="st">"methyl1"</span>, <span class="st">"methyl2"</span>, <span class="st">"methyl3"</span>,</a>
+<a class="sourceLine" id="cb7-20" title="20">                           <span class="st">"methyl4"</span>, <span class="st">"methyl5"</span>)))</a>
+<a class="sourceLine" id="cb7-21" title="21">methylmap &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/data.frame">data.frame</a></span>(<span class="dt">primary =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="st">"Jack"</span>, <span class="st">"Jack"</span>, <span class="st">"Jack"</span>, <span class="st">"Meg"</span>, <span class="st">"Bob"</span>),</a>
+<a class="sourceLine" id="cb7-22" title="22">                         <span class="dt">colname =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="st">"methyl1"</span>, <span class="st">"methyl2"</span>, <span class="st">"methyl3"</span>, <span class="st">"methyl4"</span>, <span class="st">"methyl5"</span>),</a>
+<a class="sourceLine" id="cb7-23" title="23">                         <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)</a>
+<a class="sourceLine" id="cb7-24" title="24"></a>
+<a class="sourceLine" id="cb7-25" title="25">myMultiAssay &lt;-<span class="st"> </span><span class="kw">MultiAssayExperiment</span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/list">list</a></span>(<span class="st">"A"</span> =<span class="st"> </span>exprdat, <span class="st">"B"</span> =<span class="st"> </span>methyldat), patient.data, <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/list">list</a></span>(<span class="dt">A =</span> exprmap, <span class="dt">B =</span> methylmap) <span class="op">%&gt;%</span><span class="st"> </span>listToMap)</a>
+<a class="sourceLine" id="cb7-26" title="26">myMultiAssay</a>
+<a class="sourceLine" id="cb7-27" title="27"><span class="co">#&gt; A MultiAssayExperiment object of 2 listed</span></a>
+<a class="sourceLine" id="cb7-28" title="28"><span class="co">#&gt;  experiments with user-defined names and respective classes. </span></a>
+<a class="sourceLine" id="cb7-29" title="29"><span class="co">#&gt;  Containing an ExperimentList class object of length 2: </span></a>
+<a class="sourceLine" id="cb7-30" title="30"><span class="co">#&gt;  [1] A: SummarizedExperiment with 2 rows and 4 columns </span></a>
+<a class="sourceLine" id="cb7-31" title="31"><span class="co">#&gt;  [2] B: matrix with 2 rows and 5 columns </span></a>
+<a class="sourceLine" id="cb7-32" title="32"><span class="co">#&gt; Features: </span></a>
+<a class="sourceLine" id="cb7-33" title="33"><span class="co">#&gt;  experiments() - obtain the ExperimentList instance </span></a>
+<a class="sourceLine" id="cb7-34" title="34"><span class="co">#&gt;  colData() - the primary/phenotype DataFrame </span></a>
+<a class="sourceLine" id="cb7-35" title="35"><span class="co">#&gt;  sampleMap() - the sample availability DataFrame </span></a>
+<a class="sourceLine" id="cb7-36" title="36"><span class="co">#&gt;  `$`, `[`, `[[` - extract colData columns, subset, or experiment </span></a>
+<a class="sourceLine" id="cb7-37" title="37"><span class="co">#&gt;  *Format() - convert into a long or wide DataFrame </span></a>
+<a class="sourceLine" id="cb7-38" title="38"><span class="co">#&gt;  assays() - convert ExperimentList to a SimpleList of matrices</span></a>
+<a class="sourceLine" id="cb7-39" title="39">myMultiAssay <span class="op">%&gt;%</span><span class="st"> </span>sampleMap <span class="op">%&gt;%</span><span class="st"> </span>data.frame <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select</span>(primary, assay) <span class="op">%&gt;%</span><span class="st"> </span>table <span class="co"># Yes replicates within same assay, and non-balanced  / dropouts!!!</span></a>
+<a class="sourceLine" id="cb7-40" title="40"><span class="co">#&gt;          assay</span></a>
+<a class="sourceLine" id="cb7-41" title="41"><span class="co">#&gt; primary   A B</span></a>
+<a class="sourceLine" id="cb7-42" title="42"><span class="co">#&gt;   Barbara 1 0</span></a>
+<a class="sourceLine" id="cb7-43" title="43"><span class="co">#&gt;   Bob     0 1</span></a>
+<a class="sourceLine" id="cb7-44" title="44"><span class="co">#&gt;   Jack    0 3</span></a>
+<a class="sourceLine" id="cb7-45" title="45"><span class="co">#&gt;   Jill    2 0</span></a>
+<a class="sourceLine" id="cb7-46" title="46"><span class="co">#&gt;   Meg     1 1</span></a>
+<a class="sourceLine" id="cb7-47" title="47"></a>
+<a class="sourceLine" id="cb7-48" title="48"><span class="co"># myMultiAssay %&gt;% sampleMap %&gt;% data.frame %&gt;% filter(assay == 'A')</span></a>
+<a class="sourceLine" id="cb7-49" title="49"><span class="co"># myMultiAssay$sex</span></a>
+<a class="sourceLine" id="cb7-50" title="50"></a>
+<a class="sourceLine" id="cb7-51" title="51">task_Functional_MAE_customized&lt;-<span class="kw"><a href="reference/Fun_MAE_to_taskFunc.html">Fun_MAE_to_taskFunc</a></span>(myMultiAssay, <span class="dt">param.Y.name =</span> <span class="st">'sex'</span>, <span class="dt">param.covariates =</span> <span class="ot">NULL</span>, <span class="dt">param_positive_y_level =</span> <span class="st">'M'</span>, <span class="dt">task_type =</span> <span class="st">'classif'</span>)</a></code></pre></div>
+</div>
+</div>
+<div id="multi-assay-ml-demonstration" class="section level3">
+<h3 class="hasAnchor">
+<a href="#multi-assay-ml-demonstration" class="anchor"></a>Multi-assay ML demonstration</h3>
+<div id="mlr-vertical-integration" class="section level4">
+<h4 class="hasAnchor">
+<a href="#mlr-vertical-integration" class="anchor"></a>mlr: vertical integration</h4>
+<p>Unless the learner has sepecific implementation for functional data, it will be automatically converted into standard (non-functional) task.<br>
+bartMachine model was chosed only because it has a built-in NA handling. Any other ‘learner’ from mlr could be demonstrated instead.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb8-1" title="1"></a>
+<a class="sourceLine" id="cb8-2" title="2"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(bartMachine)</a>
+<a class="sourceLine" id="cb8-3" title="3">classif_lrn_bartMachine&lt;-<span class="kw">makeLearner</span>(<span class="st">"classif.bartMachine"</span>)</a>
+<a class="sourceLine" id="cb8-4" title="4">model_bartMachine&lt;-<span class="kw">train</span>(classif_lrn_bartMachine, task_Functional_MAE)</a>
+<a class="sourceLine" id="cb8-5" title="5"><span class="co">#&gt; bartMachine initializing with 50 trees...</span></a>
+<a class="sourceLine" id="cb8-6" title="6"><span class="co">#&gt; bartMachine vars checked...</span></a>
+<a class="sourceLine" id="cb8-7" title="7"><span class="co">#&gt; bartMachine java init...</span></a>
+<a class="sourceLine" id="cb8-8" title="8"><span class="co">#&gt; bartMachine factors created...</span></a>
+<a class="sourceLine" id="cb8-9" title="9"><span class="co">#&gt; bartMachine before preprocess...</span></a>
+<a class="sourceLine" id="cb8-10" title="10"><span class="co">#&gt; bartMachine after preprocess... 1868 total features...</span></a>
+<a class="sourceLine" id="cb8-11" title="11"><span class="co">#&gt; warning: cannot use MSE of linear model for s_sq_y if p &gt; n. bartMachine will use sample var(y) instead.</span></a>
+<a class="sourceLine" id="cb8-12" title="12"><span class="co">#&gt; bartMachine sigsq estimated...</span></a>
+<a class="sourceLine" id="cb8-13" title="13"><span class="co">#&gt; bartMachine training data finalized...</span></a>
+<a class="sourceLine" id="cb8-14" title="14"><span class="co">#&gt; Now building bartMachine for classification ...Covariate importance prior ON. Missing data feature ON. </span></a>
+<a class="sourceLine" id="cb8-15" title="15"><span class="co">#&gt; evaluating in sample data...done</span></a>
+<a class="sourceLine" id="cb8-16" title="16">Predict_bartMachine&lt;-model_bartMachine <span class="op">%&gt;%</span><span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/stats/topics/predict">predict</a></span>(task_Functional_MAE)</a>
+<a class="sourceLine" id="cb8-17" title="17">Predict_bartMachine <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">calculateConfusionMatrix</span>()</a>
+<a class="sourceLine" id="cb8-18" title="18"><span class="co">#&gt;         predicted</span></a>
+<a class="sourceLine" id="cb8-19" title="19"><span class="co">#&gt; true       0   1 -err.-</span></a>
+<a class="sourceLine" id="cb8-20" title="20"><span class="co">#&gt;   0      248   0      0</span></a>
+<a class="sourceLine" id="cb8-21" title="21"><span class="co">#&gt;   1        0 137      0</span></a>
+<a class="sourceLine" id="cb8-22" title="22"><span class="co">#&gt;   -err.-   0   0      0</span></a></code></pre></div>
+</div>
+</div>
+</div>
+<div id="case-studies-tba" class="section level2">
+<h2 class="hasAnchor">
+<a href="#case-studies-tba" class="anchor"></a>Case studies (TBA):</h2>
 <div id="cavdmetamae-proof-of-concept-example" class="section level3">
 <h3 class="hasAnchor">
 <a href="#cavdmetamae-proof-of-concept-example" class="anchor"></a>1. CAVDmetaMAE: proof-of-concept example</h3>
@@ -170,7 +467,9 @@ Private repo. Access permission by request.</p>
 <h4 class="hasAnchor">
 <a href="#papers-reproducible-results" class="anchor"></a>Paper’s reproducible results</h4>
 <p>B. Biomarker discovery:<br>
-B.1 Feature selection: Fun_lrn_univ_only_makePrep_MaG, Fun_lrn_univ_Clusters_All_makePrep_MaG<br>
+B.1 Feature selection:<br>
+Fun_lrn_univ_only_makePrep_MaG<br>
+Fun_lrn_univ_Clusters_All_makePrep_MaG<br>
 B.2 Sensitivity analysis</p>
 </div>
 <div id="customized-multi-assay-feature-selection" class="section level4">
@@ -182,7 +481,8 @@ B.2 Sensitivity analysis</p>
 <div id="annotated-public-datasets-tba" class="section level3">
 <h3 class="hasAnchor">
 <a href="#annotated-public-datasets-tba" class="anchor"></a>3. Annotated public datasets (TBA)</h3>
-<p>TCGA <a href="http://bioconductor.org/packages/release/data/experiment/html/curatedTCGAData.html">curatedTCGAData</a> Microbiome <a href="http://bioconductor.org/packages/release/data/experiment/vignettes/curatedMetagenomicData/inst/doc/curatedMetagenomicData.html">curatedMetagenomicData</a> <br><br></p>
+<p>TCGA <a href="http://bioconductor.org/packages/release/data/experiment/html/curatedTCGAData.html">curatedTCGAData</a><br>
+Microbiome <a href="http://bioconductor.org/packages/release/data/experiment/vignettes/curatedMetagenomicData/inst/doc/curatedMetagenomicData.html">curatedMetagenomicData</a><br><br><br></p>
 </div>
 <div id="customized-multi-assay-cpos-composable-pipelines-tba" class="section level3">
 <h3 class="hasAnchor">

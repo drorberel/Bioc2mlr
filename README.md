@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# Bioc2mlr <img src="Bioc2mlr_Sticker.png" width="20%" height="20%" align="right" />
+# Bioc2mlr <img src="man/figures/Bioc2mlr_Sticker.png" width="20%" height="20%" align="right" />
 
 R package to bridge between Bioconductor’s S4 complex genomic data
 container, to mlr, a meta machine learning aggregator package.
@@ -42,7 +42,7 @@ popular publicly available genomic datasets such as
 
 ## Vision:
 
-![](vision.jpg)<!-- -->
+![](man/figures/vision.jpg)<!-- -->
 
 ## Installation
 
@@ -376,8 +376,8 @@ Predict_bartMachine %>% calculateConfusionMatrix()
 #>         predicted
 #> true       0   1 -err.-
 #>   0      248   0      0
-#>   1        2 135      2
-#>   -err.-   2   0      2
+#>   1        0 137      0
+#>   -err.-   0   0      0
 ```
 
 ## Case studies (TBA):

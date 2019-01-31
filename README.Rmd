@@ -14,7 +14,7 @@ knitr::opts_chunk$set(
 
 
 
-# Bioc2mlr <img src="Bioc2mlr_Sticker.png" width="20%" height="20%" align="right" />
+# Bioc2mlr <img src="man/figures/Bioc2mlr_Sticker.png" width="20%" height="20%" align="right" />
 
 R package to bridge between Bioconductor’s S4 complex genomic data container, to mlr, a meta machine learning aggregator package.
 
@@ -29,7 +29,7 @@ Bioc2mlr is a compact utility package designed to bridge between these approache
 
 ## Vision:
 ```{r, echo = F}
-knitr::include_graphics("vision.jpg")
+knitr::include_graphics("man/figures/vision.jpg")
 ```
 
 

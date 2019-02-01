@@ -33,6 +33,15 @@ knitr::include_graphics("man/figures/vision.jpg")
 ```
 
 
+## Why mlr?
+Because it support functional / clustered data.
+
+## What about caret/SuperLearner/tidymodels ?
+Sure. Work in progress. keep tuned.  
+[caret](https://github.com/drorberel/Bioc2caret)  
+[SuperLearner](https://github.com/drorberel/Bioc2SuperLearner)  
+[tidymodels](https://github.com/drorberel/Bioc2tidymodels)  
+
 ## Installation
 
 ```{r, eval = FALSE}

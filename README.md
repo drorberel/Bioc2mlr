@@ -216,8 +216,8 @@ Predict_bartMachine %>% calculateConfusionMatrix()
 #>         predicted
 #> true       0   1 -err.-
 #>   0      248   0      0
-#>   1        2 135      2
-#>   -err.-   2   0      2
+#>   1        0 137      0
+#>   -err.-   0   0      0
 ```
 
 ## Case studies (TBA):
@@ -237,8 +237,9 @@ Within each study, immune biomarkers will be analyzed by both single
 assays, and combinations across multiple
 assays.  
 [https://github.com/drorberel/CAVDmetaMAE](https://github.com/drorberel/CAVDmetaMAE "CAVDmetaMAE")  
-Private repo. Access permission by request.
-
+Private repo. Access permission by
+request.  
+![](man/figures/CAVDmetaMAE_ridge.jpg)<!-- -->![](man/figures/pheatmaps_DT.png)<!-- -->
 <br>
 <br>
 

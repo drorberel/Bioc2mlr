@@ -153,7 +153,12 @@ The CAVDmetaMAE package implement a hypothesis-free approach, to find best candi
 Within each study, immune biomarkers will be analyzed by both single assays, and combinations across multiple assays.  
 [https://github.com/drorberel/CAVDmetaMAE](https://github.com/drorberel/CAVDmetaMAE "CAVDmetaMAE")  
 Private repo. Access permission by request.  
+```{r, echo = F}
+knitr::include_graphics("man/figures/CAVDmetaMAE_ridge.jpg")
 
+knitr::include_graphics("man/figures/pheatmaps_DT.png")
+
+```
 <br>
 <br>
 
